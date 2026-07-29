@@ -4,6 +4,7 @@ import { AppSidebar, SiteHeader } from '@/components/layout/nav';
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar';
 import { Toaster } from 'sonner';
 import { UserProvider, useUser } from '@/components/context/user-context';
+import { SessionRefresher } from '@/components/auth/session-refresher';
 import { getSession } from '@/lib/cookies';
 import { redirect } from 'next/navigation';
 
@@ -20,6 +21,7 @@ export default async function DashboardLayout({
 	const user = await getSession();
 	return (
 		<UserProvider user={user}>
+			{user && <SessionRefresher exp={user.exp} />}
 			<SidebarProvider
 				style={
 					{

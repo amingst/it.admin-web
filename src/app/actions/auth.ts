@@ -49,7 +49,13 @@ import {
 } from '@inverted-tech/fragments/Authentication';
 import { toIso } from '@/lib/utils';
 import { APIErrorReason, APIErrorSchema } from '@inverted-tech/fragments';
-import { clearToken, authHeaders, getSession, setToken } from '@/lib/cookies';
+import {
+	clearToken,
+	authHeaders,
+	getSession,
+	setToken,
+	decodeToken,
+} from '@/lib/cookies';
 // import {
 // 	APIErrorReason,
 // 	APIErrorSchema,
@@ -259,6 +265,24 @@ export async function renewToken() {
 	} catch (error) {
 		console.error(error);
 		return create(RenewTokenResponseSchema);
+	}
+}
+
+/**
+ * Renews the current bearer token and persists it to the session cookie.
+ * Called proactively (before expiry) by the client-side session refresher.
+ */
+export async function refreshSession(): Promise<{ ok: boolean; exp?: number }> {
+	try {
+		const result = await renewToken();
+		if (!result?.BearerToken) return { ok: false };
+
+		await setToken(result.BearerToken);
+		const decoded = decodeToken(result.BearerToken);
+		return { ok: true, exp: decoded?.exp };
+	} catch (error) {
+		console.error('refreshSession error:', error);
+		return { ok: false };
 	}
 }
 

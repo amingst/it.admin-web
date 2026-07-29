@@ -54,14 +54,18 @@ export function RichTextField({
 		if (readyOnce.current) return;
 		readyOnce.current = true;
 		if (!editorRef.current) return;
-		editorRef.current.injectHTML(value);
 		lastLocalValue.current = value;
+		// injectHTML performs a discrete (synchronous) editor update, which
+		// flushes decorator state via ReactDOM.flushSync internally. Deferring
+		// to a microtask keeps that flush outside of React's render/commit
+		// pass, avoiding "flushSync called from inside a lifecycle method".
+		queueMicrotask(() => editorRef.current?.injectHTML(value));
 	}, [value]);
 
 	React.useEffect(() => {
 		if (!editorRef.current) return;
 		if (lastLocalValue.current === value) return;
-		editorRef.current.injectHTML(value);
+		queueMicrotask(() => editorRef.current?.injectHTML(value));
 	}, [value]);
 
 	return (

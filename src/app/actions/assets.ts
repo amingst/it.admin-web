@@ -124,6 +124,10 @@ export async function searchAssets(
 	}
 }
 
+export async function getAssetDataUrl(assetId: string): Promise<string> {
+	return `${API_BASE_URL}/cms/asset/${encodeURIComponent(assetId)}/data`;
+}
+
 // TODO: Add Error.proto errors
 export async function createAsset(req: CreateAssetRequest) {
 	const url = `${API_BASE_URL}/cms/admin/asset`;

@@ -34,6 +34,7 @@ import {
 	type Extension,
 } from '@lexkit/editor';
 import { indentExtension } from './indent-extension';
+import { uploadEditorImage } from './image-upload';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Toggle } from '@/components/ui/toggle';
 import { Button } from '@/components/ui/button';
@@ -86,6 +87,12 @@ const markdownExt =
 			})
 		: markdownExtension;
 
+const imageExt = imageExtension.configure({
+	uploadHandler: uploadEditorImage,
+	forceUpload: true,
+	pasteListener: { insert: true, replace: true },
+});
+
 const extensions = [
 	historyExtension,
 	boldExtension,
@@ -98,7 +105,7 @@ const extensions = [
 	linkExtension,
 	listExtension,
 	tableExtension,
-	imageExtension,
+	imageExt,
 	horizontalRuleExtension,
 	htmlEmbedExtension,
 	htmlExtension,
