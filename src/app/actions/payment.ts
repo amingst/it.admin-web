@@ -8,6 +8,10 @@ import {
 	CancelSubscriptionResponseSchema,
 	GetSubscriptionRecordResponseSchema,
 	ListSubscriptionsResponseSchema,
+	ReRunOtherFailedPaymentRequest,
+	ReRunOtherFailedPaymentRequestSchema,
+	ReRunFailedPaymentResponse,
+	ReRunFailedPaymentResponseSchema,
 } from '@inverted-tech/fragments/Authorization/Payment';
 
 const API_BASE_URL = process.env.API_BASE_URL!;
@@ -70,4 +74,41 @@ export async function cancelSubscribition(formData: FormData) {
 	).trim();
 	if (!userId || !internalSubscriptionId) return;
 	await cancelSubscription(userId, internalSubscriptionId);
+}
+
+export async function reRunFailedPayment(formData: FormData) {
+	'use server';
+	const userId = String(formData.get('userId') ?? '').trim();
+	const internalSubscriptionId = String(
+		formData.get('internalSubscriptionId') ?? '',
+	).trim();
+	if (!userId || !internalSubscriptionId) return;
+	await ReRunOtherFailedPayment(userId, internalSubscriptionId);
+}
+
+export async function ReRunOtherFailedPayment(userId: string, subId: string) {
+	try {
+		const url = `${API_BASE}/payment/admin/user/${userId}/subscription/${subId}/rerun`;
+		const req = create(ReRunOtherFailedPaymentRequestSchema, {
+			UserID: userId,
+			InternalSubscriptionID: subId,
+		});
+
+		const res = await fetch(url, {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json',
+				...(await authHeaders()),
+			},
+			body: toJsonString(ReRunOtherFailedPaymentRequestSchema, req),
+		});
+
+		const body: ReRunFailedPaymentResponse = await res.json();
+		return body;
+	} catch (error) {
+		console.error(error);
+		return create(ReRunFailedPaymentResponseSchema, {
+			Error: 'Unknown Error',
+		});
+	}
 }

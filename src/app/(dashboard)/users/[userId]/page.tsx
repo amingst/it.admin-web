@@ -23,6 +23,7 @@ import {
 import {
 	getSubscriptionsForUser,
 	cancelSubscribition,
+	reRunFailedPayment,
 } from '@/app/actions/payment';
 import { getSession } from '@/lib/cookies';
 import { requireRole } from '@/lib/rbac';
@@ -165,6 +166,12 @@ export default async function ViewUserPage({
 		revalidatePath(`/users/${id}`);
 	}
 
+	async function reRunFailedPaymentAction(formData: FormData) {
+		'use server';
+		await reRunFailedPayment(formData);
+		revalidatePath(`/users/${id}`);
+	}
+
 	return (
 		<div>
 			<div className="mb-6">
@@ -219,6 +226,7 @@ export default async function ViewUserPage({
 					<UserSubscriptions
 						subscriptions={subs}
 						cancelSubscriptionAction={cancelSubscriptionAction}
+						reRunFailedPaymentAction={reRunFailedPaymentAction}
 					/>
 				</div>
 			) : null}

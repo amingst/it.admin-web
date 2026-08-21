@@ -136,6 +136,12 @@ function paymentStatusMeta(status?: unknown) {
 	return paymentStatusMap.Payment_Unknown;
 }
 
+function isFailedPayment(status?: unknown) {
+	if (typeof status === 'string') return status === 'Payment_Failed';
+	if (typeof status === 'number') return status === PaymentStatus.Payment_Failed;
+	return false;
+}
+
 function SummaryRow({
 	label,
 	value,
@@ -165,10 +171,23 @@ type GenericSubscriptionLike = GenericSubscriptionFullRecord & {
 
 function PaymentCard({
 	payment,
+	userId,
+	internalSubscriptionId,
+	reRunFailedPaymentAction,
+	rerunFormId,
 }: {
 	payment: GenericPaymentRecord & { Status?: unknown };
+	userId?: string;
+	internalSubscriptionId?: string;
+	reRunFailedPaymentAction?: (formData: FormData) => Promise<void>;
+	rerunFormId: string;
 }) {
 	const status = paymentStatusMeta(payment.Status);
+	const canRerun =
+		isFailedPayment(payment.Status) &&
+		Boolean(reRunFailedPaymentAction) &&
+		Boolean(userId) &&
+		Boolean(internalSubscriptionId);
 	return (
 		<Card>
 			<CardContent className="space-y-3 pt-4">
@@ -181,7 +200,59 @@ function PaymentCard({
 							{fmtDate(payment.CreatedOnUTC)}
 						</div>
 					</div>
-					<Badge variant={status.variant}>{status.label}</Badge>
+					<div className="flex items-center gap-2">
+						<Badge variant={status.variant}>{status.label}</Badge>
+						{canRerun ? (
+							<>
+								<form
+									id={rerunFormId}
+									action={reRunFailedPaymentAction}
+								>
+									<input
+										type="hidden"
+										name="userId"
+										value={userId}
+									/>
+									<input
+										type="hidden"
+										name="internalSubscriptionId"
+										value={internalSubscriptionId}
+									/>
+								</form>
+								<AlertDialog>
+									<AlertDialogTrigger asChild>
+										<Button
+											variant="outline"
+											size="sm"
+										>
+											Rerun Payment
+										</Button>
+									</AlertDialogTrigger>
+									<AlertDialogContent>
+										<AlertDialogHeader>
+											<AlertDialogTitle>Rerun failed payment?</AlertDialogTitle>
+											<AlertDialogDescription>
+												This will attempt to process this subscription&apos;s
+												payment again.
+											</AlertDialogDescription>
+										</AlertDialogHeader>
+										<AlertDialogFooter>
+											<AlertDialogCancel>Cancel</AlertDialogCancel>
+											<AlertDialogAction asChild>
+												<Button
+													size="sm"
+													form={rerunFormId}
+													type="submit"
+												>
+													Rerun Payment
+												</Button>
+											</AlertDialogAction>
+										</AlertDialogFooter>
+									</AlertDialogContent>
+								</AlertDialog>
+							</>
+						) : null}
+					</div>
 				</div>
 				<div className="grid grid-cols-1 gap-3 text-sm sm:grid-cols-3">
 					<div>
@@ -213,11 +284,13 @@ function SubscriptionItem({
 	index,
 	userId,
 	cancelSubscriptionAction,
+	reRunFailedPaymentAction,
 }: {
 	item: GenericSubscriptionLike;
 	index: number;
 	userId?: string;
 	cancelSubscriptionAction?: (formData: FormData) => Promise<void>;
+	reRunFailedPaymentAction?: (formData: FormData) => Promise<void>;
 }) {
 	const record = item.SubscriptionRecord;
 	const status = subscriptionStatusMeta(record?.Status);
@@ -382,6 +455,10 @@ function SubscriptionItem({
 									<PaymentCard
 										key={`${payment.InternalPaymentID}-${idx}`}
 										payment={payment}
+										userId={cancelUserId}
+										internalSubscriptionId={internalSubscriptionId}
+										reRunFailedPaymentAction={reRunFailedPaymentAction}
+										rerunFormId={`rerun-payment-${internalSubscriptionId || index}-${payment.InternalPaymentID || idx}`}
 									/>
 								))}
 							</div>
@@ -401,12 +478,14 @@ export function UserSubscriptions({
 	subscriptions,
 	userId,
 	cancelSubscriptionAction,
+	reRunFailedPaymentAction,
 }: {
 	subscriptions?: {
 		Generic?: GenericSubscriptionFullRecord[] | GenericSubscriptionFullRecord;
 	};
 	userId?: string;
 	cancelSubscriptionAction?: (formData: FormData) => Promise<void>;
+	reRunFailedPaymentAction?: (formData: FormData) => Promise<void>;
 }) {
 	const genericList = Array.isArray(subscriptions?.Generic)
 		? (subscriptions?.Generic as GenericSubscriptionLike[])
@@ -453,6 +532,7 @@ export function UserSubscriptions({
 							index={index}
 							userId={userId}
 							cancelSubscriptionAction={cancelSubscriptionAction}
+							reRunFailedPaymentAction={reRunFailedPaymentAction}
 						/>
 					))}
 				</Accordion>
