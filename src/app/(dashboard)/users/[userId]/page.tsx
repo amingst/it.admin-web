@@ -24,6 +24,7 @@ import {
 	getSubscriptionsForUser,
 	cancelSubscribition,
 	reRunFailedPayment,
+	ReconcileOtherSubscription,
 } from '@/app/actions/payment';
 import { getSession } from '@/lib/cookies';
 import { requireRole } from '@/lib/rbac';
@@ -172,6 +173,19 @@ export default async function ViewUserPage({
 		revalidatePath(`/users/${id}`);
 	}
 
+	async function reconcileSubscriptionAction(
+		userId: string,
+		internalSubscriptionId: string,
+	) {
+		'use server';
+		const res = await ReconcileOtherSubscription(
+			userId,
+			internalSubscriptionId,
+		);
+		revalidatePath(`/users/${id}`);
+		return { Error: res.Error };
+	}
+
 	return (
 		<div>
 			<div className="mb-6">
@@ -227,6 +241,7 @@ export default async function ViewUserPage({
 						subscriptions={subs}
 						cancelSubscriptionAction={cancelSubscriptionAction}
 						reRunFailedPaymentAction={reRunFailedPaymentAction}
+						reconcileSubscriptionAction={reconcileSubscriptionAction}
 					/>
 				</div>
 			) : null}

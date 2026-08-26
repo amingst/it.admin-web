@@ -30,6 +30,7 @@ import {
 	Palette,
 	PlusSquare,
 	Settings as SettingsIcon,
+	ShoppingBag,
 	UserIcon,
 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
@@ -126,6 +127,16 @@ const data = {
 					title: 'Content Settings',
 					icon: FilesIcon,
 					url: '/settings/content',
+				},
+				{
+					title: 'Bulk Payment Actions',
+					icon: CreditCard,
+					url: '/settings/bulk-actions',
+				},
+				{
+					title: 'Bulk Merch Actions',
+					icon: ShoppingBag,
+					url: '/settings/merch-bulk-actions',
 				},
 			],
 		},
