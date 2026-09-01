@@ -383,7 +383,7 @@ function SubscriptionItem({
 			<AccordionContent>
 				<div className='space-y-6'>
 					<div className='flex flex-wrap items-center justify-end gap-2'>
-						{/* {canReconcile ? (
+						{canReconcile ? (
 							<Button
 								variant='outline'
 								size='sm'
@@ -394,7 +394,7 @@ function SubscriptionItem({
 									? 'Reconciling...'
 									: 'Reconcile Subscription'}
 							</Button>
-						) : null} */}
+						) : null}
 						{!isCanceled && internalSubscriptionId ? (
 							canCancel ? (
 								<form
